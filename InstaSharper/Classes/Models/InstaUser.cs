@@ -27,5 +27,6 @@ namespace InstaSharper.Classes.Models
         public long NationalNumber { get; set; }
         public int Gender { get; set; }
         public string Email { get; set; }
+        public int FollowerCount { get; set; }
     }
 }

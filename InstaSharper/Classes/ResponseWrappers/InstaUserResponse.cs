@@ -39,5 +39,8 @@ namespace InstaSharper.Classes.ResponseWrappers
 
         [JsonProperty("external_url")]
         public string ExternalURL { get; set; }
+
+        [JsonProperty("follower_count")]
+        public int FollowerCount { get; set; }
     }
 }

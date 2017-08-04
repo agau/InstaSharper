@@ -1,11 +1,12 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26114.2
+VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InstaSharper", "InstaSharper\InstaSharper.csproj", "{449A948D-CC65-4D1A-8159-6FA232F972D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InstaSharper", "InstaSharper\InstaSharper.csproj", "{449A948D-CC65-4D1A-8159-6FA232F972D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InstaSharper.Tests", "InstaSharper.Tests\InstaSharper.Tests.csproj", "{DBE6FBB7-CDE7-4CDF-AB08-989A43CC4D46}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InstaSharper.Tests", "InstaSharper.Tests\InstaSharper.Tests.csproj", "{DBE6FBB7-CDE7-4CDF-AB08-989A43CC4D46}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InstaDashboard", "..\..\..\Documents\Visual Studio 2015\Projects\InstaDashboard\InstaDashboard\InstaDashboard.csproj", "{DE68C255-2D31-4CB4-A314-6C943FD2150E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +22,10 @@ Global
 		{DBE6FBB7-CDE7-4CDF-AB08-989A43CC4D46}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBE6FBB7-CDE7-4CDF-AB08-989A43CC4D46}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBE6FBB7-CDE7-4CDF-AB08-989A43CC4D46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE68C255-2D31-4CB4-A314-6C943FD2150E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE68C255-2D31-4CB4-A314-6C943FD2150E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE68C255-2D31-4CB4-A314-6C943FD2150E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE68C255-2D31-4CB4-A314-6C943FD2150E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
