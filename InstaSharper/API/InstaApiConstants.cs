@@ -82,5 +82,6 @@
         public const string COMMENT_BREADCRUMB_KEY = "iN4$aGr0m";
         public const int TIMEZONE_OFFSET = 43200;
         public static string LIKE_FEED = API_SUFFIX + "/v1/feed/liked/";
+        public static string SAVED_FEED = API_SUFFIX + "/v1/feed/saved/";
     }
 }

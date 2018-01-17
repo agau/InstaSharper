@@ -105,5 +105,20 @@ namespace InstaSharper.Tests.Endpoints
             Assert.NotNull(feed);
             Assert.False(anyDuplicate);
         }
+
+        [Fact]
+        public async void GetUserSavedFeedTest()
+        {
+            Assert.True(_authInfo.ApiInstance.IsUserAuthenticated);
+
+            var getFeedResult = await _authInfo.ApiInstance.GetSavedFeedAsync(2);
+            var feed = getFeedResult.Value;
+            var anyDuplicate = feed.GroupBy(x => x.Code).Any(g => g.Count() > 1);
+
+            //assert
+            Assert.True(getFeedResult.Succeeded);
+            Assert.NotNull(feed);
+            Assert.False(anyDuplicate);
+        }
     }
 }

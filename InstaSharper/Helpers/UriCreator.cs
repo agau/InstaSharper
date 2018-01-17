@@ -367,8 +367,20 @@ namespace InstaSharper.Helpers
                 throw new Exception("Can't create URI for getting like feed");
             var query = string.Empty;
             if (!string.IsNullOrEmpty(maxId)) query += $"max_id={maxId}";
+            var uriBuilder = new UriBuilder(instaUri) { Query = query };
+            return uriBuilder.Uri;
+        }
+
+        public static Uri GetUserSavedFeedUri(string maxId = null)
+        {
+            if (!Uri.TryCreate(BaseInstagramUri, InstaApiConstants.SAVED_FEED, out var instaUri))
+                throw new Exception("Can't create URI for getting saved feed");
+            var query = string.Empty;
+            if (!string.IsNullOrEmpty(maxId)) query += $"max_id={maxId}";
             var uriBuilder = new UriBuilder(instaUri) {Query = query};
             return uriBuilder.Uri;
         }
+
+
     }
 }

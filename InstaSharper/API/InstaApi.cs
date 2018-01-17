@@ -1208,6 +1208,32 @@ namespace InstaSharper.API
             }
             return Result.Fail(GetBadStatusFromJsonString(json).Message, (InstaMediaList) null);
         }
+
+        public async Task<IResult<InstaMediaList>> GetSavedFeedAsync(int maxPages = 0)
+        {
+            ValidateUser();
+            if (maxPages == 0) maxPages = int.MaxValue;
+            var instaUri = UriCreator.GetUserSavedFeedUri();
+            var request = HttpHelper.GetDefaultRequest(HttpMethod.Get, instaUri, _deviceInfo);
+            var response = await _httpClient.SendAsync(request);
+            var json = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var mediaResponse = JsonConvert.DeserializeObject<InstaMediaListResponse>(json,
+                    new InstaMediaListDataConverter());
+                var moreAvailable = mediaResponse.MoreAvailable;
+                var converter = ConvertersFabric.GetMediaListConverter(mediaResponse);
+                var mediaList = converter.Convert();
+                mediaList.Pages++;
+                var nextId = mediaResponse.NextMaxId;
+                while (moreAvailable && mediaList.Pages < maxPages)
+                {
+                }
+                return Result.Success(mediaList);
+            }
+            return Result.Fail(GetBadStatusFromJsonString(json).Message, (InstaMediaList)null);
+        }
+
         #endregion
 
         #region private part

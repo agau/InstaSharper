@@ -317,6 +317,15 @@ namespace InstaSharper.API
         ///     <see cref="InstaMediaList" />
         /// </returns>
         Task<IResult<InstaMediaList>> GetLikeFeedAsync(int maxPages = 0);
+
+        /// <summary>
+        ///     Get feed of media you saved.
+        /// </summary>
+        /// <param name="maxPages">Maximum count of pages to retrieve</param>
+        /// <returns>
+        ///     <see cref="InstaMediaList" />
+        /// </returns>
+        Task<IResult<InstaMediaList>> GetSavedFeedAsync(int maxPages = 0);
         #endregion
     }
 }
