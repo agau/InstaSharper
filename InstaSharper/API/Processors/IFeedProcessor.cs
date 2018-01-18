@@ -12,5 +12,6 @@ namespace InstaSharper.API.Processors
         Task<IResult<InstaActivityFeed>> GetFollowingRecentActivityFeedAsync(PaginationParameters paginationParameters);
         Task<IResult<InstaActivityFeed>> GetRecentActivityFeedAsync(PaginationParameters paginationParameters);
         Task<IResult<InstaMediaList>> GetLikeFeedAsync(PaginationParameters paginationParameters);
+        Task<IResult<InstaMediaList>> GetSavedFeedAsync(PaginationParameters paginationParameters);
     }
 }

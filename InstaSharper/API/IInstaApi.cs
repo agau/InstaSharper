@@ -404,18 +404,7 @@ namespace InstaSharper.API
         /// <returns>
         ///     <see cref="InstaMediaList" />
         /// </returns>
-        Task<IResult<InstaMediaList>> GetLikeFeedAsync(int maxPages = 0);
-
-        /// <summary>
-        ///     Get feed of media you saved.
-        /// </summary>
-        /// <param name="maxPages">Maximum count of pages to retrieve</param>
-        /// <returns>
-        ///     <see cref="InstaMediaList" />
-        /// </returns>
-        Task<IResult<InstaMediaList>> GetSavedFeedAsync(int maxPages = 0);
         Task<IResult<InstaMediaList>> GetLikeFeedAsync(PaginationParameters paginationParameters);
-
 
         /// <summary>
         ///     Get friendship status for given user id.
@@ -504,6 +493,16 @@ namespace InstaSharper.API
         /// <param name="paginationParameters">Pagination parameters: next id and max amount of pages to load</param>
         /// <returns>Location feed</returns>
         Task<IResult<InstaLocationFeed>> GetLocationFeed(long locationId, PaginationParameters paginationParameters);
+
+        /// <summary>
+        ///     Get saved media feed.
+        /// </summary>
+        /// <param name="paginationParameters">Pagination parameters: next id and max amount of pages to load</param>
+        /// <returns>
+        ///     <see cref="InstaMediaList" />
+        /// </returns>
+        Task<IResult<InstaMediaList>> GetSavedFeedAsync(PaginationParameters paginationParameters);
+        
 
         #endregion
     }

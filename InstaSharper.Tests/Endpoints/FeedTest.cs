@@ -142,7 +142,7 @@ namespace InstaSharper.Tests.Endpoints
         {
             Assert.True(_authInfo.ApiInstance.IsUserAuthenticated);
 
-            var getFeedResult = await _authInfo.ApiInstance.GetSavedFeedAsync(2);
+            var getFeedResult = await _authInfo.ApiInstance.GetSavedFeedAsync(PaginationParameters.MaxPagesToLoad(5));
             var feed = getFeedResult.Value;
             var anyDuplicate = feed.GroupBy(x => x.Code).Any(g => g.Count() > 1);
 

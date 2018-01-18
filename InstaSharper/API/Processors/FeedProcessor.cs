@@ -243,5 +243,37 @@ namespace InstaSharper.API.Processors
             }
             return Result.Success(activityFeed);
         }
+
+        public async Task<IResult<InstaMediaList>> GetSavedFeedAsync(PaginationParameters paginationParameters)
+        {
+            var instaUri = UriCreator.GetUserSavedFeedUri(paginationParameters.NextId);
+            var request = HttpHelper.GetDefaultRequest(HttpMethod.Get, instaUri, _deviceInfo);
+            var response = await _httpRequestProcessor.SendAsync(request);
+            var json = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode != HttpStatusCode.OK)
+                return Result.UnExpectedResponse<InstaMediaList>(response, json);
+            var mediaResponse = JsonConvert.DeserializeObject<InstaMediaListResponse>(json,
+                new InstaMediaListDataConverter());
+
+            var mediaList = ConvertersFabric.Instance.GetMediaListConverter(mediaResponse).Convert();
+            mediaList.NextId = paginationParameters.NextId = mediaResponse.NextMaxId;
+            while (mediaResponse.MoreAvailable
+                   && !string.IsNullOrEmpty(paginationParameters.NextId)
+                   && paginationParameters.PagesLoaded < paginationParameters.MaximumPagesToLoad)
+            {
+                var result = await GetSavedFeedAsync(paginationParameters);
+                if (!result.Succeeded)
+                    return Result.Fail(result.Info, mediaList);
+
+                paginationParameters.PagesLoaded++;
+                mediaList.NextId = paginationParameters.NextId = result.Value.NextId;
+                mediaList.AddRange(result.Value);
+            }
+            mediaList.PageSize = mediaResponse.ResultsCount;
+            mediaList.Pages = paginationParameters.PagesLoaded;
+            return Result.Success(mediaList);
+        }
+
+
     }
 }

@@ -111,8 +111,8 @@ namespace InstaSharper.API
         public const string HEADER_USER_AGENT = "User-Agent";
         public const string LIKE_FEED = API_SUFFIX + "/feed/liked/";
         public const string USER_REEL_FEED = API_SUFFIX + "/feed/user/{0}/reel_media/";
+        public static string SAVED_FEED = API_SUFFIX + "/feed/saved/";
         public static readonly Uri BaseInstagramUri = new Uri(BASE_INSTAGRAM_API_URL);
-        public static string LIKE_FEED = API_SUFFIX + "/v1/feed/liked/";
-        public static string SAVED_FEED = API_SUFFIX + "/v1/feed/saved/";
+
     }
 }

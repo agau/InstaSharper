@@ -23,8 +23,7 @@ namespace InstaSharper.Converters
                 ExternalUrl = SourceObject.ExternalURL,
                 ShowConversionEditEntry = SourceObject.ShowConversationEditEntry,
                 Gender = SourceObject.Gender,
-                PhoneNumber = SourceObject.PhoneNumber,
-                FollowerCount = SourceObject.FollowerCount
+                PhoneNumber = SourceObject.PhoneNumber                
             };
 
             if (SourceObject.HDProfilePicVersions != null && SourceObject.HDProfilePicVersions?.Length > 0)
