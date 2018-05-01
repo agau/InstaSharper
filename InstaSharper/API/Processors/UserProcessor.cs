@@ -113,7 +113,34 @@ namespace InstaSharper.API.Processors
         {
             try
             {
-                var userUri = UriCreator.GetUserInfoUri(pk);
+                var userUri = UriCreator.GetUserInfoByIdUri(pk);
+                return await GetUserInfoAsync(userUri);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result.Fail<InstaUserInfo>(exception.Message);
+            }
+        }
+
+        public async Task<IResult<InstaUserInfo>> GetUserInfoByUsernameAsync(string username)
+        {
+            try
+            {
+                var userUri = UriCreator.GetUserInfoByUsernameUri(username);
+                return await GetUserInfoAsync(userUri);
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result.Fail<InstaUserInfo>(exception.Message);
+            }
+        }
+
+        private async Task<IResult<InstaUserInfo>> GetUserInfoAsync(Uri userUri)
+        {
+            try
+            {
                 var request = HttpHelper.GetDefaultRequest(HttpMethod.Get, userUri, _deviceInfo);
                 var response = await _httpRequestProcessor.SendAsync(request);
                 var json = await response.Content.ReadAsStringAsync();
@@ -163,34 +190,35 @@ namespace InstaSharper.API.Processors
         }
 
         public async Task<IResult<InstaUserShortList>> GetUserFollowersAsync(string username,
-            PaginationParameters paginationParameters)
+            PaginationParameters paginationParameters, string searchQuery)
         {
             var followers = new InstaUserShortList();
             try
             {
                 var user = await GetUserAsync(username);
                 var userFollowersUri =
-                    UriCreator.GetUserFollowersUri(user.Value.Pk, _user.RankToken, paginationParameters.NextId);
+                    UriCreator.GetUserFollowersUri(user.Value.Pk, _user.RankToken, searchQuery,
+                        paginationParameters.NextId);
                 var followersResponse = await GetUserListByUriAsync(userFollowersUri);
                 if (!followersResponse.Succeeded)
-                    Result.Fail(followersResponse.Info, (InstaUserList) null);
+                    return Result.Fail(followersResponse.Info, (InstaUserShortList) null);
                 followers.AddRange(
-                    followersResponse.Value.Items.Select(ConvertersFabric.Instance.GetUserShortConverter)
+                    followersResponse.Value.Items?.Select(ConvertersFabric.Instance.GetUserShortConverter)
                         .Select(converter => converter.Convert()));
                 followers.NextId = followersResponse.Value.NextMaxId;
+
                 var pagesLoaded = 1;
                 while (!string.IsNullOrEmpty(followersResponse.Value.NextMaxId)
                        && pagesLoaded < paginationParameters.MaximumPagesToLoad)
                 {
                     var nextFollowersUri =
-                        UriCreator.GetUserFollowersUri(user.Value.Pk, _user.RankToken,
+                        UriCreator.GetUserFollowersUri(user.Value.Pk, _user.RankToken, searchQuery,
                             followersResponse.Value.NextMaxId);
                     followersResponse = await GetUserListByUriAsync(nextFollowersUri);
                     if (!followersResponse.Succeeded)
-                        return Result.Success($"Not all pages were downloaded: {followersResponse.Info.Message}",
-                            followers);
+                        return Result.Fail(followersResponse.Info, followers);
                     followers.AddRange(
-                        followersResponse.Value.Items.Select(ConvertersFabric.Instance.GetUserShortConverter)
+                        followersResponse.Value.Items?.Select(ConvertersFabric.Instance.GetUserShortConverter)
                             .Select(converter => converter.Convert()));
                     pagesLoaded++;
                     followers.NextId = followersResponse.Value.NextMaxId;
@@ -206,16 +234,17 @@ namespace InstaSharper.API.Processors
         }
 
         public async Task<IResult<InstaUserShortList>> GetUserFollowingAsync(string username,
-            PaginationParameters paginationParameters)
+            PaginationParameters paginationParameters, string searchQuery)
         {
             var following = new InstaUserShortList();
             try
             {
                 var user = await GetUserAsync(username);
-                var uri = UriCreator.GetUserFollowingUri(user.Value.Pk, _user.RankToken, paginationParameters.NextId);
+                var uri = UriCreator.GetUserFollowingUri(user.Value.Pk, _user.RankToken, searchQuery,
+                    paginationParameters.NextId);
                 var userListResponse = await GetUserListByUriAsync(uri);
                 if (!userListResponse.Succeeded)
-                    Result.Fail(userListResponse.Info, following);
+                    return Result.Fail(userListResponse.Info, (InstaUserShortList) null);
                 following.AddRange(
                     userListResponse.Value.Items.Select(ConvertersFabric.Instance.GetUserShortConverter)
                         .Select(converter => converter.Convert()));
@@ -225,12 +254,11 @@ namespace InstaSharper.API.Processors
                        && pages < paginationParameters.MaximumPagesToLoad)
                 {
                     var nextUri =
-                        UriCreator.GetUserFollowingUri(user.Value.Pk, _user.RankToken,
+                        UriCreator.GetUserFollowingUri(user.Value.Pk, _user.RankToken, searchQuery,
                             userListResponse.Value.NextMaxId);
                     userListResponse = await GetUserListByUriAsync(nextUri);
                     if (!userListResponse.Succeeded)
-                        return Result.Success($"Not all pages were downloaded: {userListResponse.Info.Message}",
-                            following);
+                        return Result.Fail(userListResponse.Info, following);
                     following.AddRange(
                         userListResponse.Value.Items.Select(ConvertersFabric.Instance.GetUserShortConverter)
                             .Select(converter => converter.Convert()));
@@ -250,7 +278,7 @@ namespace InstaSharper.API.Processors
         public async Task<IResult<InstaUserShortList>> GetCurrentUserFollowersAsync(
             PaginationParameters paginationParameters)
         {
-            return await GetUserFollowersAsync(_user.UserName, paginationParameters);
+            return await GetUserFollowersAsync(_user.UserName, paginationParameters, string.Empty);
         }
 
         public async Task<IResult<InstaMediaList>> GetUserTagsAsync(long userId,
@@ -404,9 +432,7 @@ namespace InstaSharper.API.Processors
             var instaUserListResponse = JsonConvert.DeserializeObject<InstaUserListShortResponse>(json);
             if (instaUserListResponse.IsOk())
                 return Result.Success(instaUserListResponse);
-            var status = ErrorHandlingHelper.GetBadStatusFromJsonString(json);
-            Result.Fail(new ResultInfo(status.Message), (InstaUserListShortResponse) null);
-            return Result.Success(instaUserListResponse);
+            return Result.UnExpectedResponse<InstaUserListShortResponse>(response, json);
         }
     }
 }

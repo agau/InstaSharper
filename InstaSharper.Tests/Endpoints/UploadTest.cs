@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using InstaSharper.Classes.Models;
 using InstaSharper.Tests.Classes;
 using Xunit;
@@ -16,6 +17,25 @@ namespace InstaSharper.Tests.Endpoints
         private readonly AuthenticatedTestFixture _authInfo;
 
         [Fact]
+        public async void UploadVideo()
+        {
+            Assert.True(_authInfo.ApiInstance.IsUserAuthenticated);
+           
+            var mediaVideo = new InstaVideo(Path.GetFullPath(@"../../../../assets/video.mp4"), 640, 480, 3);
+            var mediaImage = new InstaImage
+            {
+                Height = 480,
+                Width = 640,
+                URI = new Uri(Path.GetFullPath(@"../../../../assets/video_image.jpg"), UriKind.Absolute).LocalPath
+            };
+            var result = await _authInfo.ApiInstance.UploadVideoAsync(mediaVideo, mediaImage, "mountains");
+
+            //assert
+            Assert.True(result.Succeeded);
+            Assert.NotNull(result.Value);
+        }
+
+        [Fact]
         public async void UploadImage()
         {
             Assert.True(_authInfo.ApiInstance.IsUserAuthenticated);
@@ -24,7 +44,7 @@ namespace InstaSharper.Tests.Endpoints
             {
                 Height = 1080,
                 Width = 1080,
-                URI = new Uri(@"D:\Dropbox\Public\Inspire.jpg", UriKind.Absolute).LocalPath
+                URI = new Uri(Path.GetFullPath(@"../../../../assets/image.jpg"), UriKind.Absolute).LocalPath
             };
             var result = await _authInfo.ApiInstance.UploadPhotoAsync(mediaImage, "inspire");
 

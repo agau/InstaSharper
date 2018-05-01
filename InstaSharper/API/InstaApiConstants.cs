@@ -17,10 +17,12 @@ namespace InstaSharper.API
 
         public const string USER_AGENT =
             "Instagram 12.0.0.7.91 Android (23/6.0.1; 640dpi; 1440x2560; samsung; SM-G935F; hero2lte; samsungexynos8890; en_NZ)";
+        public const string HEADER_USER_AGENT = "User-Agent";
 
         public const string HEADER_QUERY = "q";
         public const string HEADER_RANK_TOKEN = "rank_token";
         public const string HEADER_COUNT = "count";
+        public const string HEADER_EXCLUDE_LIST = "exclude_list";
 
         public const string
             IG_SIGNATURE_KEY =
@@ -52,9 +54,13 @@ namespace InstaSharper.API
 
 
         public const string CURRENTUSER = API_SUFFIX + "/accounts/current_user?edit=true";
+        public const string SEARCH_TAGS = API_SUFFIX + "/tags/search/?q={0}&count={1}";
+        public const string GET_TAG_INFO = API_SUFFIX + "/tags/{0}/info/";
         public const string SEARCH_USERS = API_SUFFIX + "/users/search";
-        public const string GET_USER_INFO = API_SUFFIX + "/users/{0}/info/";
+        public const string GET_USER_INFO_BY_ID = API_SUFFIX + "/users/{0}/info/";
+        public const string GET_USER_INFO_BY_USERNAME = API_SUFFIX + "/users/{0}/usernameinfo/";
         public const string ACCOUNTS_LOGIN = API_SUFFIX + "/accounts/login/";
+        public const string ACCOUNTS_CREATE = API_SUFFIX + "/accounts/create/";
         public const string ACCOUNTS_2FA_LOGIN = API_SUFFIX + "/accounts/two_factor_login/";
         public const string CHANGE_PASSWORD = API_SUFFIX + "/accounts/change_password/";
         public const string ACCOUNTS_LOGOUT = API_SUFFIX + "/accounts/logout/";
@@ -100,6 +106,7 @@ namespace InstaSharper.API
         public const string DISABLE_MEDIA_COMMENTS = API_SUFFIX + "/media/{0}/disable_comments/";
         public const string DELETE_COMMENT = API_SUFFIX + "/media/{0}/comment/{1}/delete/";
         public const string UPLOAD_PHOTO = API_SUFFIX + "/upload/photo/";
+        public const string UPLOAD_VIDEO = API_SUFFIX + "/upload/video/";
         public const string MEDIA_CONFIGURE = API_SUFFIX + "/media/configure/";
         public const string MEDIA_ALBUM_CONFIGURE = API_SUFFIX + "/media/configure_sidecar/";
         public const string DELETE_MEDIA = API_SUFFIX + "/media/{0}/delete/?media_type={1}";
@@ -109,7 +116,6 @@ namespace InstaSharper.API
         public const string STORY_CONFIGURE = API_SUFFIX + "/media/configure_to_reel/";
         public const string LOCATION_SEARCH = API_SUFFIX + "/location_search/";
         public const string FRIENDSHIPSTATUS = API_SUFFIX + "/friendships/show/";
-        public const string HEADER_USER_AGENT = "User-Agent";
         public const string LIKE_FEED = API_SUFFIX + "/feed/liked/";
         public const string USER_REEL_FEED = API_SUFFIX + "/feed/user/{0}/reel_media/";
         public static string SAVED_FEED = API_SUFFIX + "/feed/saved/";

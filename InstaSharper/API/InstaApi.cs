@@ -26,6 +26,7 @@ namespace InstaSharper.API
         private AndroidDevice _deviceInfo;
         private IFeedProcessor _feedProcessor;
 
+        private IHashtagProcessor _hashtagProcessor;
         private ILocationProcessor _locationProcessor;
         private IMediaProcessor _mediaProcessor;
         private IMessagingProcessor _messagingProcessor;
@@ -166,15 +167,16 @@ namespace InstaSharper.API
         /// </summary>
         /// <param name="username">Username</param>
         /// <param name="paginationParameters">Pagination parameters: next id and max amount of pages to load</param>
+        /// <param name="searchQuery">Search string to locate specific followers</param>
         /// <returns>
         ///     <see cref="T:InstaSharper.Classes.Models.InstaUserShortList" />
         /// </returns>
         public async Task<IResult<InstaUserShortList>> GetUserFollowersAsync(string username,
-            PaginationParameters paginationParameters)
+            PaginationParameters paginationParameters, string searchQuery = "")
         {
             ValidateUser();
             ValidateLoggedIn();
-            return await _userProcessor.GetUserFollowersAsync(username, paginationParameters);
+            return await _userProcessor.GetUserFollowersAsync(username, paginationParameters, searchQuery);
         }
 
         /// <summary>
@@ -182,15 +184,16 @@ namespace InstaSharper.API
         /// </summary>
         /// <param name="username">Username</param>
         /// <param name="paginationParameters">Pagination parameters: next id and max amount of pages to load</param>
+        /// <param name="searchQuery">Search string to locate specific followings</param>
         /// <returns>
         ///     <see cref="T:InstaSharper.Classes.Models.InstaUserShortList" />
         /// </returns>
         public async Task<IResult<InstaUserShortList>> GetUserFollowingAsync(string username,
-            PaginationParameters paginationParameters)
+            PaginationParameters paginationParameters, string searchQuery = "")
         {
             ValidateUser();
             ValidateLoggedIn();
-            return await _userProcessor.GetUserFollowingAsync(username, paginationParameters);
+            return await _userProcessor.GetUserFollowingAsync(username, paginationParameters, searchQuery);
         }
 
         /// <summary>
@@ -205,6 +208,17 @@ namespace InstaSharper.API
             return await _userProcessor.GetUserInfoByIdAsync(pk);
         }
 
+        /// <summary>
+        ///     Gets the user extended information (followers count, following count, bio, etc) by username.
+        /// </summary>
+        /// <param name="username">Username, like "instagram"</param>
+        /// <returns></returns>
+        public async Task<IResult<InstaUserInfo>> GetUserInfoByUsernameAsync(string username)
+        {
+            ValidateUser();
+            ValidateLoggedIn();
+            return await _userProcessor.GetUserInfoByUsernameAsync(username);
+        }
 
         /// <summary>
         ///     Get followers list for currently logged in user asynchronously
@@ -237,7 +251,7 @@ namespace InstaSharper.API
             ValidateLoggedIn();
             var user = await GetUserAsync(username);
             if (!user.Succeeded)
-                return Result.Fail($"Unable to get user {username} to get tags", (InstaMediaList) null);
+                return Result.Fail($"Unable to get user {username} to get tags", (InstaMediaList)null);
             return await _userProcessor.GetUserTagsAsync(user.Value.Pk, paginationParameters);
         }
 
@@ -475,7 +489,20 @@ namespace InstaSharper.API
             ValidateLoggedIn();
             return await _commentProcessor.DeleteCommentAsync(mediaId, commentId);
         }
+        /// <summary>
+        ///     Upload video
+        /// </summary>
+        /// <param name="video">Video to upload</param>
+        /// <param name="imageThumbnail">Image thumbnail</param>
+        /// <param name="caption">Caption</param>
+        /// <returns></returns>
+        public async Task<IResult<InstaMedia>> UploadVideoAsync(InstaVideo video, InstaImage imageThumbnail, string caption)
+        {
+            ValidateUser();
+            ValidateLoggedIn();
 
+            return await _mediaProcessor.UploadVideoAsync(video, imageThumbnail, caption);
+        }
         /// <summary>
         ///     Upload photo
         /// </summary>
@@ -782,12 +809,49 @@ namespace InstaSharper.API
         }
 
 
+
         #region Authentication/State data
 
         /// <summary>
         ///     Indicates whether user authenticated or not
         /// </summary>
         public bool IsUserAuthenticated { get; private set; }
+        /// <summary>
+        ///     Create a new instagram account
+        /// </summary>
+        /// <param name="username">Username</param>
+        /// <param name="password">Password</param>
+        /// <param name="email">Email</param>
+        /// <param name="firstName">First name (optional)</param>
+        /// <returns></returns>
+        public async Task<IResult<CreationResponse>> CreateNewAccount(string username, string password, string email, string firstName)
+        {
+            CreationResponse createResponse = new CreationResponse();
+            try
+            {
+                var postData = new Dictionary<string, string>
+                {
+                    {"email",     email },
+                    {"username",    username},
+                    {"password",    password},
+                    {"device_id",   ApiRequestMessage.GenerateDeviceId()},
+                    {"guid",        _deviceInfo.DeviceGuid.ToString()},
+                    {"first_name",  firstName}
+                };
+
+                var instaUri = UriCreator.GetCreateAccountUri();
+                var request = HttpHelper.GetSignedRequest(HttpMethod.Post, instaUri, _deviceInfo, postData);
+                var response = await _httpRequestProcessor.SendAsync(request);
+                var result = await response.Content.ReadAsStringAsync();
+
+                return Result.Success(JsonConvert.DeserializeObject<CreationResponse>(result));
+            }
+            catch (Exception exception)
+            {
+                _logger?.LogException(exception);
+                return Result.Fail<CreationResponse>(exception);
+            }
+        }
 
         /// <summary>
         ///     Login using given credentials asynchronously
@@ -805,15 +869,12 @@ namespace InstaSharper.API
             ValidateRequestMessage();
             try
             {
-                var csrftoken = string.Empty;
                 var firstResponse = await _httpRequestProcessor.GetAsync(_httpRequestProcessor.Client.BaseAddress);
                 var cookies =
                     _httpRequestProcessor.HttpHandler.CookieContainer.GetCookies(_httpRequestProcessor.Client
                         .BaseAddress);
                 _logger?.LogResponse(firstResponse);
-                foreach (Cookie cookie in cookies)
-                    if (cookie.Name == InstaApiConstants.CSRFTOKEN)
-                        csrftoken = cookie.Value;
+                var csrftoken = cookies[InstaApiConstants.CSRFTOKEN]?.Value ?? String.Empty;
                 _user.CsrfToken = csrftoken;
                 var instaUri = UriCreator.GetLoginUri();
                 var signature =
@@ -826,12 +887,10 @@ namespace InstaSharper.API
                 var request = HttpHelper.GetDefaultRequest(HttpMethod.Post, instaUri, _deviceInfo);
                 request.Content = new FormUrlEncodedContent(fields);
                 request.Properties.Add(InstaApiConstants.HEADER_IG_SIGNATURE, signature);
-                request.Properties.Add(InstaApiConstants.HEADER_IG_SIGNATURE_KEY_VERSION,
-                    InstaApiConstants.IG_SIGNATURE_KEY_VERSION);
+                request.Properties.Add(InstaApiConstants.HEADER_IG_SIGNATURE_KEY_VERSION, InstaApiConstants.IG_SIGNATURE_KEY_VERSION);
                 var response = await _httpRequestProcessor.SendAsync(request);
                 var json = await response.Content.ReadAsStringAsync();
-                if (response.StatusCode != HttpStatusCode.OK
-                ) //If the password is correct BUT 2-Factor Authentication is enabled, it will still get a 400 error (bad request)
+                if (response.StatusCode != HttpStatusCode.OK) //If the password is correct BUT 2-Factor Authentication is enabled, it will still get a 400 error (bad request)
                 {
                     //Then check it
                     var loginFailReason = JsonConvert.DeserializeObject<InstaLoginBaseResponse>(json);
@@ -851,10 +910,8 @@ namespace InstaSharper.API
                     return Result.UnExpectedResponse<InstaLoginResult>(response, json);
                 }
 
-                var loginInfo =
-                    JsonConvert.DeserializeObject<InstaLoginResponse>(json);
-                IsUserAuthenticated = loginInfo.User != null &&
-                                      loginInfo.User.UserName.ToLower() == _user.UserName.ToLower();
+                var loginInfo = JsonConvert.DeserializeObject<InstaLoginResponse>(json);
+                IsUserAuthenticated = loginInfo.User?.UserName.ToLower() == _user.UserName.ToLower();
                 var converter = ConvertersFabric.Instance.GetUserShortConverter(loginInfo.User);
                 _user.LoggedInUder = converter.Convert();
                 _user.RankToken = $"{_user.LoggedInUder.Pk}_{_httpRequestProcessor.RequestMessage.phone_id}";
@@ -974,8 +1031,9 @@ namespace InstaSharper.API
                 var json = await response.Content.ReadAsStringAsync();
                 if (response.StatusCode != HttpStatusCode.OK) return Result.UnExpectedResponse<bool>(response, json);
                 var logoutInfo = JsonConvert.DeserializeObject<BaseStatusResponse>(json);
-                IsUserAuthenticated = logoutInfo.Status == "ok";
-                return Result.Success(true);
+                if (logoutInfo.Status == "ok")
+                    IsUserAuthenticated = false;
+                return Result.Success(!IsUserAuthenticated);
             }
             catch (Exception exception)
             {
@@ -1023,6 +1081,7 @@ namespace InstaSharper.API
 
         private void InvalidateProcessors()
         {
+            _hashtagProcessor = new HashtagProcessor(_deviceInfo, _user, _httpRequestProcessor, _logger);
             _locationProcessor = new LocationProcessor(_deviceInfo, _user, _httpRequestProcessor, _logger);
             _collectionProcessor = new CollectionProcessor(_deviceInfo, _user, _httpRequestProcessor, _logger);
             _mediaProcessor = new MediaProcessor(_deviceInfo, _user, _httpRequestProcessor, _logger);
@@ -1042,7 +1101,8 @@ namespace InstaSharper.API
 
         private void ValidateLoggedIn()
         {
-            if (!IsUserAuthenticated) throw new ArgumentException("user must be authenticated");
+            if (!IsUserAuthenticated)
+                throw new ArgumentException("user must be authenticated");
         }
 
         private void ValidateRequestMessage()

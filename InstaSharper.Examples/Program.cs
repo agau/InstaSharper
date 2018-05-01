@@ -34,15 +34,22 @@ namespace InstaSharper.Examples
                 var userSession = new UserSessionData
                 {
                     UserName = "username",
-                    Password =  "password"
+                    Password = "password"
                 };
 
+                var delay = RequestDelay.FromSeconds(2, 2);
                 // create new InstaApi instance using Builder
                 _instaApi = InstaApiBuilder.CreateBuilder()
                     .SetUser(userSession)
                     .UseLogger(new DebugLogger(LogLevel.Exceptions)) // use logger for requests and debug messages
-                    .SetRequestDelay(TimeSpan.FromSeconds(2))
+                    .SetRequestDelay(delay)
                     .Build();
+                //// create account
+                //var username = "kajokoleha";
+                //var password = "ramtinjokar";
+                //var email = "ramtinak@live.com";
+                //var firstName = "Ramtin";
+                //var accountCreation = await _instaApi.CreateNewAccount(username, password, email, firstName);
 
                 const string stateFile = "state.bin";
                 try
@@ -50,9 +57,10 @@ namespace InstaSharper.Examples
                     if (File.Exists(stateFile))
                     {
                         Console.WriteLine("Loading state from file");
-                        Stream fs = File.OpenRead(stateFile);
-                        fs.Seek(0, SeekOrigin.Begin);
-                        _instaApi.LoadStateDataFromStream(fs);
+                        using (var fs = File.OpenRead(stateFile))
+                        {
+                            _instaApi.LoadStateDataFromStream(fs);
+                        }
                     }
                 }
                 catch (Exception e)
@@ -64,7 +72,9 @@ namespace InstaSharper.Examples
                 {
                     // login
                     Console.WriteLine($"Logging in as {userSession.UserName}");
+                    delay.Disable();
                     var logInResult = await _instaApi.LoginAsync();
+                    delay.Enable();
                     if (!logInResult.Succeeded)
                     {
                         Console.WriteLine($"Unable to login: {logInResult.Info.Message}");
@@ -86,6 +96,7 @@ namespace InstaSharper.Examples
                 Console.WriteLine("Press 6 to start messaging demo sample");
                 Console.WriteLine("Press 7 to start location demo sample");
                 Console.WriteLine("Press 8 to start collections demo sample");
+                Console.WriteLine("Press 9 to start upload video demo sample");
 
                 var samplesMap = new Dictionary<ConsoleKey, IDemoSample>
                 {
@@ -96,7 +107,9 @@ namespace InstaSharper.Examples
                     [ConsoleKey.D5] = new SaveLoadState(_instaApi),
                     [ConsoleKey.D6] = new Messaging(_instaApi),
                     [ConsoleKey.D7] = new LocationSample(_instaApi),
-                    [ConsoleKey.D8] = new CollectionSample(_instaApi)
+                    [ConsoleKey.D8] = new CollectionSample(_instaApi),
+                    [ConsoleKey.D9] = new UploadVideo(_instaApi)
+
 
                 };
                 var key = Console.ReadKey();
