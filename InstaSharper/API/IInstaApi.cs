@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using InstaSharper.Classes;
 using InstaSharper.Classes.Models;
+using InstaSharper.Classes.ResponseWrappers;
+using InstaSharper.Classes.ResponseWrappers.BaseResponse;
 
 namespace InstaSharper.API
 {
@@ -32,6 +34,17 @@ namespace InstaSharper.API
         #region Async Members
 
         /// <summary>
+        ///     Create a new instagram account
+        /// </summary>
+        /// <param name="username">Username</param>
+        /// <param name="password">Password</param>
+        /// <param name="email">Email</param>
+        /// <param name="firstName">First name (optional)</param>
+        /// <returns></returns>
+        Task<IResult<CreationResponse>> CreateNewAccount(string username, string password, string email,
+            string firstName);
+
+        /// <summary>
         ///     Login using given credentials asynchronously
         /// </summary>
         /// <returns>
@@ -43,6 +56,32 @@ namespace InstaSharper.API
         /// </returns>
         Task<IResult<InstaLoginResult>> LoginAsync();
 
+        /// <summary>
+        ///     Search Place
+        /// </summary>
+        Task<IResult<FbSearchPlaceResponse>> SearchPlace(string searchQuery, int count = 5);
+
+        
+        /// <summary>
+        ///     Reset challenge asynchronously
+        /// </summary>
+        Task<IResult<InstaResetChallenge>> ResetChallenge();
+
+        /// <summary>
+        ///    Get verify method asynchronously
+        /// </summary>
+        Task<IResult<InstaResetChallenge>> GetVerifyStep();
+
+        /// <summary>
+        ///     Choose verify method asynchronously
+        /// </summary>
+        Task<IResult<InstaResetChallenge>> ChooseVerifyMethod(int choice);
+
+        /// <summary>
+        ///     Send verify code asynchronously
+        /// </summary>
+        Task<IResult<InstaResetChallenge>> SendVerifyCode(string securityCode);
+        
         /// <summary>
         ///     2-Factor Authentication Login using a verification code
         ///     Before call this method, please run LoginAsync first.
@@ -117,6 +156,16 @@ namespace InstaSharper.API
         Task<IResult<InstaUser>> GetUserAsync(string username);
 
         /// <summary>
+        ///     Search users asynchronously
+        /// </summary>
+        /// <param name="searchPattern">Search pattern e.g. part of username</param>
+        /// <returns>
+        ///     List of users matches pattern
+        ///     <see cref="InstaUserShortList" />
+        /// </returns>
+        Task<IResult<InstaUserShortList>> SearchUsersAsync(string searchPattern);
+
+        /// <summary>
         ///     Get currently logged in user info asynchronously
         /// </summary>
         /// <returns>
@@ -139,22 +188,24 @@ namespace InstaSharper.API
         /// </summary>
         /// <param name="username">Username</param>
         /// <param name="paginationParameters">Pagination parameters: next id and max amount of pages to load</param>
+        /// <param name="searchQuery">Search string to locate specific followers</param>
         /// <returns>
         ///     <see cref="InstaUserShortList" />
         /// </returns>
         Task<IResult<InstaUserShortList>> GetUserFollowersAsync(string username,
-            PaginationParameters paginationParameters);
+            PaginationParameters paginationParameters, string searchQuery = "");
 
         /// <summary>
         ///     Get following list by username asynchronously
         /// </summary>
         /// <param name="username">Username</param>
         /// <param name="paginationParameters">Pagination parameters: next id and max amount of pages to load</param>
+        /// <param name="searchQuery">Search string to locate specific followings</param>
         /// <returns>
         ///     <see cref="InstaUserShortList" />
         /// </returns>
         Task<IResult<InstaUserShortList>> GetUserFollowingAsync(string username,
-            PaginationParameters paginationParameters);
+            PaginationParameters paginationParameters, string searchQuery = "");
 
         /// <summary>
         ///     Get followers list for currently logged in user asynchronously
@@ -272,7 +323,6 @@ namespace InstaSharper.API
         /// <param name="userId">User id</param>
         Task<IResult<InstaFriendshipStatus>> UnBlockUserAsync(long userId);
 
-
         /// <summary>
         ///     Get media comments
         /// </summary>
@@ -310,6 +360,15 @@ namespace InstaSharper.API
         /// <param name="mediaId">Media id</param>
         /// <param name="commentId">Comment id</param>
         Task<IResult<bool>> DeleteCommentAsync(string mediaId, string commentId);
+
+        /// <summary>
+        ///     Upload video
+        /// </summary>
+        /// <param name="video">Video to upload</param>
+        /// <param name="imageThumbnail">Image thumbnail</param>
+        /// <param name="caption">Caption</param>
+        /// <returns></returns>
+        Task<IResult<InstaMedia>> UploadVideoAsync(InstaVideo video, InstaImage imageThumbnail, string caption);
 
         /// <summary>
         ///     Upload photo
@@ -496,6 +555,26 @@ namespace InstaSharper.API
         Task<IResult<InstaLocationFeed>> GetLocationFeed(long locationId, PaginationParameters paginationParameters);
 
         /// <summary>
+        ///     Searches for specific hashtag by search query.
+        /// </summary>
+        /// <param name="query">Search query</param>
+        /// <param name="excludeList">
+        ///     Array of numerical hashtag IDs (ie "17841562498105353") to exclude from the response,
+        ///     allowing you to skip tags from a previous call to get more results
+        /// </param>
+        /// <param name="rankToken">The rank token from the previous page's response</param>
+        /// <returns>List of hashtags</returns>
+        Task<IResult<InstaHashtagSearch>> SearchHashtag(string query, IEnumerable<long> excludeList = null,
+            string rankToken = null);
+
+        /// <summary>
+        ///     Gets the hashtag information by user tagname.
+        /// </summary>
+        /// <param name="tagname">Tagname</param>
+        /// <returns>Hashtag information</returns>
+        Task<IResult<InstaHashtag>> GetHashtagInfo(string tagname);
+
+        /// <summary>
         ///     Gets the user extended information (followers count, following count, bio, etc) by user identifier.
         /// </summary>
         /// <param name="pk">User Id, like "123123123"</param>
@@ -503,15 +582,50 @@ namespace InstaSharper.API
         Task<IResult<InstaUserInfo>> GetUserInfoByIdAsync(long pk);
 
         /// <summary>
-        ///     Get saved media feed.
+        ///     Gets the user extended information (followers count, following count, bio, etc) by username.
         /// </summary>
-        /// <param name="paginationParameters">Pagination parameters: next id and max amount of pages to load</param>
-        /// <returns>
-        ///     <see cref="InstaMediaList" />
-        /// </returns>
-        Task<IResult<InstaMediaList>> GetSavedFeedAsync(PaginationParameters paginationParameters);
-        
+        /// <param name="username">Username, like "instagram"</param>
+        /// <returns></returns>
+        Task<IResult<InstaUserInfo>> GetUserInfoByUsernameAsync(string username);
 
+        /// <summary>
+        /// Send link as a message
+        /// </summary>
+        /// <param name="message">Direct message (link + description)</param>
+        /// <param name="recipients">Array of recipients, user pk like "123123123"</param>
+        /// <returns>Affected threads</returns>
+        Task<IResult<InstaDirectInboxThreadList>> SendLinkMessage(InstaMessageLink message, params long[] recipients);
+        
+        /// <summary>
+        /// Send link as a message
+        /// </summary>
+        /// <param name="message">Direct message (link + description)</param>
+        /// <param name="threads">Array of threads, thread id like "111182366841710300949128137443944311111"</param>
+        /// <returns>Affected threads</returns>
+        Task<IResult<InstaDirectInboxThreadList>> SendLinkMessage(InstaMessageLink message, params string[] threads);
+
+        /// <summary>
+        /// Send media as a message
+        /// </summary>
+        /// <param name="mediaId">Media id, e.g. "1166111111128767752_1111111"</param>
+        /// <param name="mediaType">Type of media (photo/video)</param>
+        /// <param name="threads">Array of threads, thread id e.g. "111182366841710300949128137443944311111"</param>
+        /// <returns>Affected threads</returns>
+        Task<IResult<InstaDirectInboxThreadList>> ShareMedia(string mediaId, InstaMediaType mediaType,
+            params string[] threads);
+
+        /// <summary>
+        /// Decline ALL pending threads
+        /// </summary>
+        /// <returns>Status response</returns>
+        Task<IResult<BaseStatusResponse>> DeclineAllPendingDirectThreads();
+
+        /// <summary>
+        /// Approve single thread by id
+        /// </summary>
+        /// <param name="threadId">Thread id, e.g. "111182366841710300949128137443944311111"</param>
+        /// <returns>Status response</returns>
+        Task<IResult<BaseStatusResponse>> ApprovePendingDirectThread(string threadId);
         #endregion
     }
 }
